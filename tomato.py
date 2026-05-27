@@ -189,7 +189,7 @@ if st.button("🚀 착과율 예측 시작"):
     </div>
     """,
     unsafe_allow_html=True
-)
+    )
 
     # 상태 메시지
     if display_score >= 80:
