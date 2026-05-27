@@ -170,26 +170,26 @@ if st.button("🚀 착과율 예측 시작"):
     st.progress(safe_score)
 
     # 결과 박스
-    st.markdown(
-        f"""
-        <div class="result-box">
+   st.markdown(
+    f"""
+    <div class="result-box">
 
-            <div style="font-size:1.2rem;">
-                AI 분석 완료
-            </div>
-
-            <div class="result-text">
-                {display_score:.1f}%
-            </div>
-
-            <div style="margin-top:10px;color:#ddd;">
-                현재 환경 기준 예상 착과율
-            </div>
-
+        <div style="font-size:1.2rem;">
+            AI 분석 완료
         </div>
-        """,
-        unsafe_allow_html=True
-    )
+
+        <div class="result-text">
+            {display_score:.1f}%
+        </div>
+
+        <div style="margin-top:10px;color:#ddd;">
+            현재 환경 기준 예상 착과율
+        </div>
+
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
     # 상태 메시지
     if display_score >= 80:
