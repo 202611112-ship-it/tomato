@@ -16,7 +16,6 @@ st.set_page_config(
 # ---------------------------
 st.markdown("""
 <style>
-
 .stApp {
     background: linear-gradient(
         135deg,
@@ -88,28 +87,29 @@ st.markdown("""
     padding: 25px;
     border-radius: 20px;
     text-align: center;
-    background: linear-gradient(
-        135deg,
-        rgba(255,75,75,0.2),
-        rgba(255,255,255,0.05)
-    );
+    background: rgba(255, 75, 75, 0.15);
     border: 1px solid rgba(255,255,255,0.15);
     box-shadow: 0 0 25px rgba(255,75,75,0.3);
 }
 
 .result-text {
-    font-size: 2rem;
+    font-size: 2.5rem;
     font-weight: bold;
     color: #ffb703;
+    margin: 10px 0;
 }
-
 </style>
 """, unsafe_allow_html=True)
 
 # ---------------------------
 # 모델 불러오기
 # ---------------------------
-rf_model = joblib.load("tomato_model.pkl")
+# 실무에서는 앱이 재실행될 때마다 모델을 새로 로드하지 않도록 캐싱하는 것이 좋습니다.
+@st.cache_resource
+def load_model():
+    return joblib.load("tomato_model.pkl")
+
+rf_model = load_model()
 
 # ---------------------------
 # 타이틀
@@ -117,9 +117,7 @@ rf_model = joblib.load("tomato_model.pkl")
 st.markdown("""
 <div class="main-card">
     <div class="title">🍅 TOMATO AI</div>
-    <div class="subtitle">
-        스마트팜 착과율 예측 시스템
-    </div>
+    <div class="subtitle">스마트팜 착과율 예측 시스템</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -145,58 +143,44 @@ temp = st.number_input(
 )
 
 # ---------------------------
-# 버튼
+# 버튼 및 예측 로직
 # ---------------------------
 if st.button("🚀 착과율 예측 시작"):
 
-    # 입력 데이터
+    # 입력 데이터 데이터프레임 변환
     input_data = pd.DataFrame(
         [[humidity, temp]],
         columns=["내부습도", "외부온도"]
     )
 
-    # 예측
-    predicted = rf_model.predict(input_data) # 
+    # AI 모델 예측
+    predicted = rf_model.predict(input_data)
     score = float(predicted[0])
 
-    # 디버깅 출력
-    st.write("예측 원본값:", score)
+    # 디버깅용 원본값 출력
+    st.write(f"예측 원본값: `{score:.4f}`")
 
-    # 안전 범위 제한
-    safe_score = max(0, min(int(score), 100))
-    display_score = max(0, min(score, 100))
+    # [핵심 보완] 음수가 나오더라도 안전하게 0~100 사이로 보정
+    display_score = max(0.0, min(score, 100.0))
+    safe_progress_score = int(display_score)
 
-    # 진행바
-    st.progress(safe_score)
+    # 진행바 출력
+    st.progress(safe_progress_score)
 
-    # 결과 박스
-    st.markdown(
-    f"""
-<div class="result-box">
+    # [버그 수정] HTML 태그 내부의 불필요한 공백과 줄바꿈을 제거하여 한 줄 형태로 전달
+    result_html = (
+        f'<div class="result-box">'
+        f'  <div style="font-size:1.2rem;">AI 분석 완료</div>'
+        f'  <div class="result-text">{display_score:.1f}%</div>'
+        f'  <div style="margin-top:10px; color:#ddd;">현재 환경 기준 예상 착과율</div>'
+        f'</div>'
+    )
+    st.markdown(result_html, unsafe_allow_html=True)
 
-    <div style="font-size:1.2rem;">
-        AI 분석 완료
-    </div>
-
-    <div class="result-text">
-        {display_score:.1f}%
-    </div>
-
-    <div style="margin-top:10px; color:#ddd;">
-        현재 환경 기준 예상 착과률
-    </div>
-
-</div>
-""",
-    unsafe_allow_html=True
-)
-
-    # 상태 메시지
+    # 상태 메시지 출력
     if display_score >= 80:
         st.success("🔥 토마토 상태 최상급이다냐")
-
     elif display_score >= 60:
         st.info("🌱 꽤 괜찮은 환경이네 냐")
-
     else:
         st.warning("⚠️ 환경 조정이 필요할 수도 있다냐")
