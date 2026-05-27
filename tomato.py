@@ -156,10 +156,9 @@ if st.button("🚀 착과율 예측 시작"):
     )
 
     # 예측
-    predicted = rf_model.predict(input_data)
+    proba = rf_model.predict_proba(input_data)[0][1]
 
-    # 원본 점수
-    score = float(predicted[0])
+    score = proba * 100
 
     # 디버깅 출력
     st.write("예측 원본값:", score)
